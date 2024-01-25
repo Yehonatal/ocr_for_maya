@@ -7,3 +7,5 @@ Trying to us Tesseract (open source ocr engine) to extract the content of the a 
       - contract account number
       - mobile number
       - amount
+
+[Tesseract documentation](https://github.com/tesseract-ocr/tessdoc?tab=readme-ov-file)
