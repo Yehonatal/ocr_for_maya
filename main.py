@@ -3,6 +3,8 @@ import pytesseract
 import os
 import cv2
 import numpy as np
+import re
+from tabulate import tabulate
 
 
 def get_files_in_folder(path):
@@ -64,6 +66,25 @@ file_names = get_files_in_folder(path)
 my_config = r"--psm 6 --oem 3"
 content = []
 
+
+def extract_information(text):
+    customer_name_match = re.search(
+        r'Customer Name\s*(\w+)', text, re.IGNORECASE)
+    account_number_match = re.search(
+        r'(?:Contract|Contrack|newee) \w*\D*(\d+)', text, re.IGNORECASE)
+    mobile_number_match = re.search(r'Mobile Number\s*(\d+)', text)
+    amount_due_match = re.search(
+        r'Amount Due date\s*([\d.]+)\s*\(\s*ETB\s*\)', text)
+
+    # Extracted values or None if not found
+    return {
+        'customer_name': customer_name_match.group(1).strip() if customer_name_match else None,
+        'account_number': account_number_match.group(1).strip() if account_number_match else None,
+        'mobile_number': mobile_number_match.group(1).strip() if mobile_number_match else None,
+        'amount_due': amount_due_match.group(1).strip() if amount_due_match else None
+    }
+
+
 for file in file_names:
     image = cv2.imread(f"./assets/{file}")
 
@@ -75,5 +96,20 @@ for file in file_names:
     text = pytesseract.image_to_string(c, config=my_config)
     content.append(text)
 
-for read in content:
-    print(read)
+content_info = []
+
+for text in content:
+    extracted_info = extract_information(text)
+    content_info.append(extracted_info)
+
+# Define the column headers
+headers = ["Customer Name", "Account Number", "Mobile Number", "Amount Due"]
+rows = []
+
+rows = []
+for info in content_info:
+    rows.append([info['customer_name'], info['account_number'],
+                info['mobile_number'], info['amount_due']])
+
+# Print the table
+print(tabulate(rows, headers=headers, tablefmt="grid"))
